@@ -16,52 +16,37 @@ datasource db {
   // shadowDatabaseUrl = env(“SHADOW_DATABASE_URL”)
 }
 
-// A user of the WattShift client app
-model User {
-  id             String          @id @default(cuid())
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  email          String          @unique
-  emailVerified  Boolean         @default(false)
-  passwordHash   String
-  username       String?         @unique
-  name           String?
-  timezone       String?
-  refreshToken   String?
-  organization   Organization    @relation(fields: [organizationId], references: [id])
-  organizationId String
-  apiKeys        ApiKey[]
-  PasswordReset  PasswordReset[]
-}
-
-model PasswordReset {
-  id        String   @id @default(cuid())
+model Team {
+  id        String  @id @default(cuid()) // Use cuid() for UUID generation
+  name      String
+  badge     String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  token     String   @unique
+  updatedAt DateTime?
+  players   Player[] @relation("TeamToPlayer")
+  oldTeams  Transfer[] @relation("OldTeam")  // No change here
+  newTeams  Transfer[] @relation("NewTeam")  // No change here
 }
 
-model Organization {
-  id        String   @id @default(cuid())
+model Player {
+  id        String  @id @default(cuid())
+  name      String
+  salary    Float
+  birthDay  DateTime
+  team      Team?   @relation("TeamToPlayer", fields: [teamId], references: [id]) // Make team optional
+  teamId    String?
+  position  String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  domain    String
-  name      String?
-  users     User[]
-  apiKeys   ApiKey[]
+  updatedAt DateTime? @updatedAt
+  transfers Transfer[] @relation("transferPlayer")
 }
 
-model ApiKey {
-  id             String       @id @default(cuid())
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  userId         String
-  organizationId String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  name           String
-  key            String       @unique
-  scopes         String[] // The scopes that the api key has access to
+model Transfer {
+  id           String  @id @default(cuid())
+  oldTeam       Team?   @relation("OldTeam", fields: [oldTeamId], references: [id]) // Make oldTeam optional
+  newTeam       Team?   @relation("NewTeam", fields: [newTeamId], references: [id])
+  oldTeamId     String?  
+  newTeamId     String
+  playerId     String
+  player       Player   @relation("transferPlayer", fields: [playerId], references: [id])
+  transferDate DateTime @updatedAt
 }
