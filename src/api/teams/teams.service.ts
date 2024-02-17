@@ -51,15 +51,27 @@ export class TeamsService {
     if (badgeUrl !== '') {
       entity.badge = badgeUrl;
     }
-    const res = await this.prisma.team.update({
-      data: {
-        name,
-        badge: badgeUrl !== '' ? badgeUrl : entity.badge,
-      },
-      where: {
-        id: id,
-      },
-    });
+    let res;
+    if (badgeUrl !== '') {
+      res = await this.prisma.team.update({
+        data: {
+          name,
+          badge: badgeUrl,
+        },
+        where: {
+          id: id,
+        },
+      });
+    } else {
+      res = await this.prisma.team.update({
+        data: {
+          name,
+        },
+        where: {
+          id: id,
+        },
+      });
+    }
 
     return res;
   }
